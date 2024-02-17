@@ -274,13 +274,13 @@ void Sample_TileMesh::handleSettings()
 	
 	if (imguiButton("Save"))
 	{
-		Sample::saveAll("all_tiles_navmesh.bin", m_navMesh);
+		Sample::saveAll(navMeshPath, m_navMesh);
 	}
 
 	if (imguiButton("Load"))
 	{
 		dtFreeNavMesh(m_navMesh);
-		m_navMesh = Sample::loadAll("all_tiles_navmesh.bin");
+		m_navMesh = Sample::loadAll(navMeshPath);
 		m_navQuery->init(m_navMesh, 2048);
 	}
 
@@ -588,6 +588,7 @@ void Sample_TileMesh::handleMeshChanged(InputGeom* geom)
 
 bool Sample_TileMesh::handleBuild()
 {
+	strcpy(navMeshPath, "all_tiles_navmesh.bin");
 	if (!m_geom || !m_geom->getMesh())
 	{
 		m_ctx->log(RC_LOG_ERROR, "buildTiledNavigation: No vertices and triangles.");

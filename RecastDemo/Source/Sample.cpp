@@ -67,6 +67,7 @@ unsigned int SampleDebugDraw::areaToCol(unsigned int area)
 
 Sample::Sample() :
 	m_geom(0),
+	navMeshPath("all_tiles_navmesh.bin"),
 	m_navMesh(0),
 	m_navQuery(0),
 	m_crowd(0),
@@ -285,6 +286,14 @@ void Sample::handleUpdate(const float dt)
 	updateToolStates(dt);
 }
 
+void Sample::loadNavMesh(const char* path)
+{
+	strcpy(navMeshPath, path);
+
+	dtFreeNavMesh(m_navMesh);
+	m_navMesh = Sample::loadAll(path);
+	m_navQuery->init(m_navMesh, 2048);
+}
 
 void Sample::updateToolStates(const float dt)
 {

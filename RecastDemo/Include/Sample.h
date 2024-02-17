@@ -101,6 +101,7 @@ class Sample
 protected:
 	class InputGeom* m_geom;
 	class dtNavMesh* m_navMesh;
+	char navMeshPath[256];
 	class dtNavMeshQuery* m_navQuery;
 	class dtCrowd* m_crowd;
 
@@ -171,6 +172,7 @@ public:
 	unsigned char getNavMeshDrawFlags() const { return m_navMeshDrawFlags; }
 	void setNavMeshDrawFlags(unsigned char flags) { m_navMeshDrawFlags = flags; }
 
+	void loadNavMesh(const char* path);
 	void updateToolStates(const float dt);
 	void initToolStates(Sample* sample);
 	void resetToolStates();

@@ -156,7 +156,8 @@ int main(int /*argc*/, char** /*argv*/)
 	bool showMenu = !presentationMode;
 	bool showLog = false;
 	bool showTools = true;
-	bool showLevels = false;
+	bool showObjs = false;
+	bool showNavs = false;
 	bool showSample = false;
 	bool showTestCases = false;
 
@@ -169,7 +170,8 @@ int main(int /*argc*/, char** /*argv*/)
 	
 	vector<string> files;
 	const string meshesFolder = "Meshes";
-	string meshName = "Choose Mesh...";
+	string objName = "Choose OBJ...";
+	string navName = "Choose NAV...";
 	
 	float markerPosition[3] = {0, 0, 0};
 	bool markerPositionSet = false;
@@ -214,7 +216,7 @@ int main(int /*argc*/, char** /*argv*/)
 					}
 					else if (event.key.keysym.sym == SDLK_t)
 					{
-						showLevels = false;
+						showObjs = false;
 						showSample = false;
 						showTestCases = true;
 						scanDirectory(testCasesFolder, ".txt", files);
@@ -540,24 +542,25 @@ int main(int /*argc*/, char** /*argv*/)
 				else
 				{
 					showSample = true;
-					showLevels = false;
+					showObjs = false;
 					showTestCases = false;
 				}
 			}
 			
 			imguiSeparator();
-			imguiLabel("Input Mesh");
-			if (imguiButton(meshName.c_str()))
+			imguiLabel("OBJ file");
+			if (imguiButton(objName.c_str()))
 			{
-				if (showLevels)
+				if (showObjs)
 				{
-					showLevels = false;
+					showObjs = false;
 				}
 				else
 				{
 					showSample = false;
 					showTestCases = false;
-					showLevels = true;
+					showObjs = true;
+					showNavs = false;
 					scanDirectory(meshesFolder, ".obj", files);
 					scanDirectoryAppend(meshesFolder, ".gset", files);
 				}
@@ -566,9 +569,27 @@ int main(int /*argc*/, char** /*argv*/)
 			{
 				char text[64];
 				snprintf(text, 64, "Verts: %.1fk  Tris: %.1fk",
-						 geom->getMesh()->getVertCount()/1000.0f,
-						 geom->getMesh()->getTriCount()/1000.0f);
+					geom->getMesh()->getVertCount() / 1000.0f,
+					geom->getMesh()->getTriCount() / 1000.0f);
 				imguiValue(text);
+			}
+
+			imguiSeparator();
+			imguiLabel("NAV File");
+			if (imguiButton(navName.c_str()))
+			{
+				if (showNavs)
+				{
+					showNavs = false;
+				}
+				else
+				{
+					showSample = false;
+					showTestCases = false;
+					showObjs = false;
+					showNavs = true;
+					scanDirectory(meshesFolder, ".nav", files);
+				}
 			}
 			imguiSeparator();
 
@@ -586,7 +607,7 @@ int main(int /*argc*/, char** /*argv*/)
 						showLog = true;
 						logScroll = 0;
 					}
-					ctx.dumpLog("Build log %s:", meshName.c_str());
+					ctx.dumpLog("Build log %s:", objName.c_str());
 					
 					// Clear test.
 					delete test;
@@ -664,7 +685,7 @@ int main(int /*argc*/, char** /*argv*/)
 		}
 		
 		// Level selection dialog.
-		if (showLevels)
+		if (showObjs)
 		{
 			static int levelScroll = 0;
 			if (imguiBeginScrollArea("Choose Level", width - 10 - 250 - 10 - 200, height - 10 - 450, 200, 450, &levelScroll))
@@ -672,24 +693,24 @@ int main(int /*argc*/, char** /*argv*/)
 			
 			vector<string>::const_iterator fileIter = files.begin();
 			vector<string>::const_iterator filesEnd = files.end();
-			vector<string>::const_iterator levelToLoad = filesEnd;
+			vector<string>::const_iterator objToLoad = filesEnd;
 			for (; fileIter != filesEnd; ++fileIter)
 			{
 				if (imguiItem(fileIter->c_str()))
 				{
-					levelToLoad = fileIter;
+					objToLoad = fileIter;
 				}
 			}
 			
-			if (levelToLoad != filesEnd)
+			if (objToLoad != filesEnd)
 			{
-				meshName = *levelToLoad;
-				showLevels = false;
+				objName = *objToLoad;
+				showObjs = false;
 				
 				delete geom;
 				geom = 0;
 				
-				string path = meshesFolder + "/" + meshName;
+				string path = meshesFolder + "/" + objName;
 				
 				geom = new InputGeom;
 				if (!geom->load(&ctx, path))
@@ -706,7 +727,7 @@ int main(int /*argc*/, char** /*argv*/)
 					
 					showLog = true;
 					logScroll = 0;
-					ctx.dumpLog("Geom load log %s:", meshName.c_str());
+					ctx.dumpLog("Geom load log %s:", objName.c_str());
 				}
 				if (sample && geom)
 				{
@@ -742,6 +763,40 @@ int main(int /*argc*/, char** /*argv*/)
 			
 			imguiEndScrollArea();
 			
+		}
+
+		// NAV selection dialog.
+		if (showNavs)
+		{
+			static int navScroll = 0;
+			if (imguiBeginScrollArea("Choose NAV", width - 10 - 250 - 10 - 200, height - 10 - 450, 200, 450, &navScroll))
+				mouseOverMenu = true;
+
+			vector<string>::const_iterator fileIter = files.begin();
+			vector<string>::const_iterator filesEnd = files.end();
+			vector<string>::const_iterator navToLoad = filesEnd;
+			for (; fileIter != filesEnd; ++fileIter)
+			{
+				if (imguiItem(fileIter->c_str()))
+				{
+					navToLoad = fileIter;
+				}
+			}
+
+			if (navToLoad != filesEnd)
+			{
+				navName = *navToLoad;
+				showNavs = false;
+
+				string path = meshesFolder + "/" + navName;
+
+				if (sample)
+				{
+					sample->loadNavMesh(path.c_str());
+				}
+			}
+
+			imguiEndScrollArea();
 		}
 		
 		// Test cases
@@ -797,10 +852,10 @@ int main(int /*argc*/, char** /*argv*/)
 					}
 
 					// Load geom.
-					meshName = test->getGeomFileName();
+					objName = test->getGeomFileName();
 					
 					
-					path = meshesFolder + "/" + meshName;
+					path = meshesFolder + "/" + objName;
 					
 					delete geom;
 					geom = new InputGeom;
@@ -812,7 +867,7 @@ int main(int /*argc*/, char** /*argv*/)
 						sample = 0;
 						showLog = true;
 						logScroll = 0;
-						ctx.dumpLog("Geom load log %s:", meshName.c_str());
+						ctx.dumpLog("Geom load log %s:", objName.c_str());
 					}
 					if (sample && geom)
 					{
@@ -826,7 +881,7 @@ int main(int /*argc*/, char** /*argv*/)
 					ctx.resetLog();
 					if (sample && !sample->handleBuild())
 					{
-						ctx.dumpLog("Build log %s:", meshName.c_str());
+						ctx.dumpLog("Build log %s:", objName.c_str());
 					}
 					
 					if (geom || sample)
